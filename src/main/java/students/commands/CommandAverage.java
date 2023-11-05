@@ -2,7 +2,7 @@ package students.commands;
 
 import students.*;
 import students.services.StudentService;
-import students.utilities.isIntegerTest;
+import students.utilities.StringAnalyst;
 
 public class CommandAverage implements Command {
 
@@ -12,7 +12,7 @@ public class CommandAverage implements Command {
         DataGroup dataGroup = new DataGroup(studentService, groupCriterion);
         String[] splittedCommand = command.split(" ");
             for (int i = 1; i < splittedCommand.length; i++) {
-                if (!isIntegerTest.isInteger(splittedCommand[i])){
+                if (!StringAnalyst.isInteger(splittedCommand[i])){
                     continue;
                 }
                 Student[] studentsInGroup = dataGroup.getStudents(Integer.parseInt(splittedCommand[i]));

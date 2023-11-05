@@ -1,9 +1,9 @@
 package students.utilities;
 
-public class isIntegerTest {
+public class StringAnalyst {
     public static boolean isInteger(String s) {
         try {
-            int i = Integer.parseInt(s);
+            Integer.parseInt(s);
             return true;
         }catch (Exception e){
             return false;

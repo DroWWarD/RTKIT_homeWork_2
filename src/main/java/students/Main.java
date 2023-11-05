@@ -12,4 +12,9 @@ public class Main {
         CommandBuilder commandBuilder = new CommandBuilder(new StudentService(new DataLoaderFile(new FileReader(studentsFile))));
         commandBuilder.start();
     }
+
+    public static String getFile(){
+        return studentsFile;
+    }
+
 }
