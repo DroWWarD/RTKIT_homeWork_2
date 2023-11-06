@@ -21,6 +21,11 @@ public class Student {
         return age;
     }
 
+    @Override
+    public String toString() {
+        return family + " " + name;
+    }
+
     public void setAge(int age) {
         this.age = age;
     }

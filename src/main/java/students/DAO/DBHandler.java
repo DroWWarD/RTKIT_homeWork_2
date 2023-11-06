@@ -172,8 +172,8 @@ public class DBHandler {
     }
 
 
-    public List<Integer> getGradesByGroups(List<String> groups) {
-        List<Integer> gradesList = new ArrayList<>();
+    public List<Progress> getProgressByGroups(List<String> groups) {
+        List<Progress> progressList = new ArrayList<>();
         try {
             try {
                 PreparedStatement preparedStatement = connection.prepareStatement("""
@@ -188,7 +188,9 @@ public class DBHandler {
                     while (resultSet.next()) {
                         Array array = resultSet.getArray("grades");
                         Integer[] arr = (Integer[]) array.getArray();
-                        gradesList.addAll(Arrays.asList(arr));
+                        Progress progress = new Progress();
+                        progress.setGrades(arr);
+                        progressList.add(progress);
                     }
                 }
             } catch (SQLException e) {
@@ -200,11 +202,11 @@ public class DBHandler {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return gradesList;
+        return progressList;
     }
 
-    public List<String> getExcellentElder(int age) {
-        List<String> resultList = new ArrayList<>();
+    public List<Student> getExcellentElder(int age) {
+        List<Student> resultList = new ArrayList<>();
         try {
             try {
                 PreparedStatement preparedStatement = connection.prepareStatement("""
@@ -215,7 +217,10 @@ public class DBHandler {
                 preparedStatement.setInt(1, age);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
-                    resultList.add(resultSet.getString("family") + " " + resultSet.getString("name"));
+                    Student student = new Student();
+                    student.setFamily(resultSet.getString("family"));
+                    student.setName(resultSet.getString("name"));
+                    resultList.add(student);
                 }
             } catch (SQLException e) {
                 System.out.println("Запрос не выполнен");
@@ -243,17 +248,7 @@ public class DBHandler {
                 preparedStatement.setString(1, family);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
-                    Progress progress = new Progress();
-                    Array array = resultSet.getArray("grades");
-                    progress.setGrades((Integer[]) array.getArray());
-                    Group group = new Group();
-                    group.setName(resultSet.getString("group_name"));
-                    Student student = new Student();
-                    student.setFamily(resultSet.getString("family"));
-                    student.setName(resultSet.getString("name"));
-                    student.setGroup(group);
-                    student.setProgress(progress);
-                    resultList.add(student);
+                    fillResultListGetStudentByFamily(resultSet, resultList);
                 }
             } catch (SQLException e) {
                 System.out.println("Запрос не выполнен");
@@ -265,5 +260,19 @@ public class DBHandler {
             throw new RuntimeException(e);
         }
         return resultList;
+    }
+
+    private void fillResultListGetStudentByFamily(ResultSet resultSet, List<Student> resultList) throws SQLException {
+        Progress progress = new Progress();
+        Array array = resultSet.getArray("grades");
+        progress.setGrades((Integer[]) array.getArray());
+        Group group = new Group();
+        group.setName(resultSet.getString("group_name"));
+        Student student = new Student();
+        student.setFamily(resultSet.getString("family"));
+        student.setName(resultSet.getString("name"));
+        student.setGroup(group);
+        student.setProgress(progress);
+        resultList.add(student);
     }
 }
