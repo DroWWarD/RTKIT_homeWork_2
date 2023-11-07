@@ -248,7 +248,7 @@ public class DBHandler {
                 preparedStatement.setString(1, family);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
-                    fillResultListGetStudentByFamily(resultSet, resultList);
+                    fillResultListStudents(resultSet, resultList);
                 }
             } catch (SQLException e) {
                 System.out.println("Запрос не выполнен");
@@ -262,7 +262,38 @@ public class DBHandler {
         return resultList;
     }
 
-    private void fillResultListGetStudentByFamily(ResultSet resultSet, List<Student> resultList) throws SQLException {
+    public List<Student> getStudentsByGroup(String group, int limit, int offset){
+        List<Student> resultList = new ArrayList<>();
+        try {
+            try {
+                PreparedStatement preparedStatement = connection.prepareStatement("""
+                        SELECT student.family, student.name, stud_group.name AS group_name, progress.grades
+                        FROM student
+                        JOIN progress ON progress.id=student.progress_id
+                        JOIN stud_group ON stud_group.id=student.stud_group_id
+                        WHERE stud_group.name LIKE ? LIMIT ? OFFSET ?
+                        """);
+                preparedStatement.setString(1, group);
+                preparedStatement.setInt(2, limit);
+                preparedStatement.setInt(3, offset);
+                ResultSet resultSet = preparedStatement.executeQuery();
+                while (resultSet.next()) {
+                    fillResultListStudents(resultSet, resultList);
+                }
+            } catch (SQLException e) {
+                System.out.println("Запрос не выполнен");
+                connection.rollback();
+                throw new RuntimeException("Произошла ошибка");
+            } finally {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return resultList;
+    }
+
+    private void fillResultListStudents(ResultSet resultSet, List<Student> resultList) throws SQLException {
         Progress progress = new Progress();
         Array array = resultSet.getArray("grades");
         progress.setGrades((Integer[]) array.getArray());
@@ -274,5 +305,56 @@ public class DBHandler {
         student.setGroup(group);
         student.setProgress(progress);
         resultList.add(student);
+    }
+
+    public void setNewGrade(String family, String name, String group, String subject, int grade) {
+        try {
+            try {
+                PreparedStatement preparedStatement = connection.prepareStatement("""
+                        SELECT progress.id, stud_plan.stud_objects, progress.grades
+                        FROM student
+                        JOIN stud_group ON stud_group.id=student.stud_group_id
+                        JOIN stud_plan ON stud_plan_id=stud_group.stud_plan_id
+                        JOIN progress ON progress.id=student.progress_id
+                        WHERE student.family LIKE ?
+                        AND student.name LIKE ?
+                        AND stud_group.name LIKE ?
+                        """);
+                preparedStatement.setString(1, family);
+                preparedStatement.setString(2, name);
+                preparedStatement.setString(3, group);
+                ResultSet resultSet = preparedStatement.executeQuery();
+                while (resultSet.next()) {
+                    int progressId = resultSet.getInt("id");
+                    String[] studObjects = (String[]) resultSet.getArray("stud_objects").getArray();
+                    int index = -1;
+                    for(int i = 0; i < studObjects.length; i++){
+                        if (studObjects[i].equals(subject)){
+                            index = i;
+                        }
+                    }
+                    if (index == -1){
+                        throw new RuntimeException("Учебный предмет с таким названием не найден");
+                    }
+                    preparedStatement = connection.prepareStatement("""
+                            UPDATE progress SET grades[?] = ?
+                            WHERE progress.id = ?
+                            """);
+                    preparedStatement.setInt(1, index);
+                    preparedStatement.setInt(2, grade);
+                    preparedStatement.setInt(3, progressId);
+                    preparedStatement.execute();
+                    connection.commit();
+                }
+
+            } catch (SQLException e) {
+                System.out.println("Запрос не выполнен");
+                connection.rollback();
+            } finally {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
