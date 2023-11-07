@@ -51,7 +51,7 @@ public class MyServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Writer output = null;
         try {
             resp.setCharacterEncoding("UTF-8");
